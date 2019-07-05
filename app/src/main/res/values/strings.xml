@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Retry</string>
+    <string name="load_details">Load Details</string>
+    <string name="no_network_message">No Network</string>
+</resources>
