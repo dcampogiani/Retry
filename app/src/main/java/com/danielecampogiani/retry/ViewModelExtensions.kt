@@ -1,9 +1,8 @@
-package com.danielecampogiani.retry
+package androidx.lifecycle
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.danielecampogiani.retry.connection.ConnectionChecker
 import kotlinx.coroutines.launch
+import java.io.Closeable
 
 fun <T> ViewModel.launchWithRetry(
     networkOperation: suspend () -> T,
@@ -28,6 +27,12 @@ fun <T> ViewModel.launchWithRetry(
             }
         }
         connectionChecker.addListener(listener)
+        val listenerHashCode = listener.hashCode().toString()
+        setTagIfAbsent(listenerHashCode, object : Closeable {
+            override fun close() {
+                connectionChecker.removeListener(listener)
+            }
+        })
     }
 
 }

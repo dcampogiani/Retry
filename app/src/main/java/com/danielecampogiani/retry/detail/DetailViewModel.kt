@@ -3,9 +3,9 @@ package com.danielecampogiani.retry.detail
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.launchWithRetry
 import com.danielecampogiani.retry.R
 import com.danielecampogiani.retry.connection.ConnectionChecker
-import com.danielecampogiani.retry.launchWithRetry
 import javax.inject.Inject
 
 class DetailViewModel @Inject constructor(
