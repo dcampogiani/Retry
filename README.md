@@ -30,6 +30,12 @@ fun <T> ViewModel.launchWithRetry(
             }
         }
         connectionChecker.addListener(listener)
+        val listenerHashCode = listener.hashCode().toString()
+        setTagIfAbsent(listenerHashCode, object : Closeable {
+            override fun close() {
+                connectionChecker.removeListener(listener)
+            }
+        })
     }
 
 }
