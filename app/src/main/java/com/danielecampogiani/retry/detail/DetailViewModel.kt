@@ -19,18 +19,6 @@ class DetailViewModel @Inject constructor(
 
 
     init {
-        /*mutableState.addSource(connectionLiveData) { hasConnection ->
-            mutableState.value = DetailState.Loading
-            if (hasConnection) {
-                viewModelScope.launch {
-                    val data = service.loadData()
-                    mutableState.value = DetailState.Result(data)
-                }
-            } else {
-                mutableState.value = DetailState.Error(R.string.no_network_message)
-            }
-        }*/
-
         launchWithRetry(
             mediatorLiveData = mutableState,
             networkOperation = { service.loadData() },
