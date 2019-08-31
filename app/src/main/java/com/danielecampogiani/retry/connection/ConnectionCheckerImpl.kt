@@ -32,11 +32,11 @@ class ConnectionCheckerImpl @Inject constructor(
     }
 
     private fun onNetworkChanged() {
-        if (isConnected) {
-            listeners.forEach {
-                it.onConnected()
-            }
+        val connected = isConnected
+        listeners.forEach {
+            it.onConnectionChanged(connected)
         }
+
     }
 
     override val isConnected: Boolean

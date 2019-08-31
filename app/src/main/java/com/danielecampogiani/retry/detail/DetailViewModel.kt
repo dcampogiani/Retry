@@ -1,35 +1,31 @@
 package com.danielecampogiani.retry.detail
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.launchWithRetry
 import com.danielecampogiani.retry.R
-import com.danielecampogiani.retry.connection.ConnectionChecker
+import com.danielecampogiani.retry.connection.ConnectionLiveData
 import javax.inject.Inject
 
 class DetailViewModel @Inject constructor(
-    private val connectionChecker: ConnectionChecker,
-    private val service: DetailService
+    private val service: DetailService,
+    connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
-    private val mutableState = MutableLiveData<DetailState>()
-
+    private val mutableState = MediatorLiveData<DetailState>()
     val state: LiveData<DetailState>
         get() = mutableState
 
 
     init {
-        load()
-    }
-
-    private fun load() {
         launchWithRetry(
+            mediatorLiveData = mutableState,
             networkOperation = { service.loadData() },
-            resultConsumer = { mutableState.value = DetailState.Result(it) },
             loading = { mutableState.value = DetailState.Loading },
+            resultConsumer = { mutableState.value = DetailState.Result(it) },
             onNoNetwork = { mutableState.value = DetailState.Error(R.string.no_network_message) },
-            connectionChecker = connectionChecker
+            connectionLiveData = connectionLiveData
         )
     }
 }

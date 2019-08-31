@@ -8,41 +8,32 @@ Core code is in ViewModelExtensions.kt:
 
 ```kotlin
 fun <T> ViewModel.launchWithRetry(
+    mediatorLiveData: MediatorLiveData<*>,
     networkOperation: suspend () -> T,
     loading: () -> Unit,
     resultConsumer: (T) -> Unit,
     onNoNetwork: () -> Unit,
-    connectionChecker: ConnectionChecker
+    connectionLiveData: ConnectionLiveData
 ) {
-
-    if (connectionChecker.isConnected) {
+    mediatorLiveData.addSource(connectionLiveData) { hasConnection ->
         loading()
-        viewModelScope.launch {
-            val networkData = networkOperation()
-            resultConsumer(networkData)
-        }
-    } else {
-        onNoNetwork()
-        val listener = object : ConnectionChecker.Listener {
-            override fun onConnected() {
-                connectionChecker.removeListener(this)
-                launchWithRetry(networkOperation, loading, resultConsumer, onNoNetwork, connectionChecker)
+        if (hasConnection) {
+            viewModelScope.launch {
+                val networkData = networkOperation()
+                resultConsumer(networkData)
             }
+
+        } else {
+            onNoNetwork()
         }
-        connectionChecker.addListener(listener)
-        val listenerHashCode = listener.hashCode().toString()
-        setTagIfAbsent(listenerHashCode, object : Closeable {
-            override fun close() {
-                connectionChecker.removeListener(listener)
-            }
-        })
     }
 
 }
 ```
 
-If the device is currently connected we use the viewModelScope to perform the network request and notify the consumer.
-Otherwise, we register a listener to schedule the network request once the device will gain connectivity again.
+ConnectionLiveData is a custom LiveData used to observe connectivity changes.
+We add it as a source to our MediatorLiveData, this way we can react to connectivity changes. 
+Every time we receive new data if the device is currently connected we use the viewModelScope to perform the network request and notify the consumer, otherwise, we notify a "no network" listener.
 
 # Usage
 
@@ -50,27 +41,23 @@ From any viewModel usage is :
 
 ```kotlin
 class DetailViewModel @Inject constructor(
-    private val connectionChecker: ConnectionChecker,
-    private val service: DetailService
+    private val service: DetailService,
+    connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
-    private val mutableState = MutableLiveData<DetailState>()
-
+    private val mutableState = MediatorLiveData<DetailState>()
     val state: LiveData<DetailState>
         get() = mutableState
 
 
     init {
-        load()
-    }
-
-    private fun load() {
         launchWithRetry(
+            mediatorLiveData = mutableState,
             networkOperation = { service.loadData() },
-            resultConsumer = { mutableState.value = DetailState.Result(it) },
             loading = { mutableState.value = DetailState.Loading },
+            resultConsumer = { mutableState.value = DetailState.Result(it) },
             onNoNetwork = { mutableState.value = DetailState.Error(R.string.no_network_message) },
-            connectionChecker = connectionChecker
+            connectionLiveData = connectionLiveData
         )
     }
 }
