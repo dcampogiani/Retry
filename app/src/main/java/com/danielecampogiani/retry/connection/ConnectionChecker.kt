@@ -9,6 +9,6 @@ interface ConnectionChecker {
     fun removeListener(listener: Listener)
 
     interface Listener {
-        fun onConnected()
+        fun onConnectionChanged(hasConnection: Boolean)
     }
 }
