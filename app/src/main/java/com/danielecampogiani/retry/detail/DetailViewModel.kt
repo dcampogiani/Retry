@@ -28,6 +28,4 @@ class DetailViewModel @Inject constructor(
             connectionLiveData = connectionLiveData
         )
     }
-
-
 }

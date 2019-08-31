@@ -23,5 +23,4 @@ fun <T> ViewModel.launchWithRetry(
             onNoNetwork()
         }
     }
-
 }
